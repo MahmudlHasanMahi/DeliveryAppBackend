@@ -173,5 +173,5 @@ STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api.User'
 AUTH_PROFILE_MODULE = 'accounts.ManagementProfile'
-CSRF_TRUSTED_ORIGINS = ['https://web-production-3875.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['web-production-baca6.up.railway.app']
 CORS_ALLOW_ALL_ORIGINS = True
