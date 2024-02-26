@@ -173,4 +173,4 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api.User'
 AUTH_PROFILE_MODULE = 'accounts.ManagementProfile'
-CORS_ALLOWED_ORIGINS = [os.environ.get("FRONTEND")]
+CORS_ALLOW_ALL_ORIGINS = True
