@@ -41,13 +41,9 @@ def create_user_profile(sender,instance,created,**kwargs):
         ManagementProfile.objects.create(user=instance)   
 
 class ManagementProfile(models.Model):
-    user = models.OneToOneField(User,limit_choices_to={'role': "MANAGEMENT"},on_delete=models.CASCADE)
+    user = models.OneToOneField(User,limit_choices_to={'role': "MANAGEMENT"},related_name="ManagementProfile",on_delete=models.CASCADE)
     title = models.TextField(max_length=250,unique=True,null=True,blank=True)
     industry = models.TextField(max_length=250,null=True,blank=True)
-
-
-
-
 
 class ManagerRider(BaseUserManager):
     def get_queryset(self,*args,**kwargs):
@@ -65,7 +61,7 @@ def create_user_profile(sender,instance,created,**kwargs):
         RiderProfile.objects.create(user=instance) 
 
 class RiderProfile(models.Model):
-    user = models.OneToOneField(User,limit_choices_to={'role': "RIDER"}, on_delete=models.CASCADE)
+    user = models.OneToOneField(User,limit_choices_to={'role': "RIDER"}, related_name="RiderProfile",on_delete=models.CASCADE)
     management = models.ForeignKey(ManagementProfile,null=True,on_delete=models.CASCADE,related_name="Rider")
     STATUS_CHOICE = [
                     ("NONE","None"),
@@ -90,7 +86,7 @@ def create_user_profile(instance,created, **kwargs):
         CustomerProfile.objects.create(user=instance)
 
 class CustomerProfile(models.Model):
-    user = models.OneToOneField(User,limit_choices_to={"role":"CUSTOMER"}, on_delete = models.CASCADE)
+    user = models.OneToOneField(User,limit_choices_to={"role":"CUSTOMER"},related_name="CustomerProfile",on_delete = models.CASCADE)
 
 class Order(models.Model):
     email = models.CharField(max_length=250,null=True,blank=True)

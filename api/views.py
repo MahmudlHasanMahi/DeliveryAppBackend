@@ -31,16 +31,13 @@ class Home(APIView):
     def get(self,request):
         management = ManagementProfile.objects.all()
         serializer = ManagementProfileSerializer(management,many=True).data
-        # rider = Rider.objects.all()
-        # serializer = RiderSerializer(rider,many=True).data
         return Response(serializer)
 
 
 class ManagementView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self,request):
-        obj = ManagementProfile.objects.get(user=request.user)
-        serializer = ManagementProfileSerializer(instance=obj).data
+        serializer = ManagementProfileSerializer(instance=request.user.ManagementProfile).data
         return Response(serializer)
     
 class CreateRiderView(APIView):
@@ -62,10 +59,8 @@ class CreateRiderView(APIView):
         else:
             obj.set_password(password)
             obj.save()
-            managementProfile = ManagementProfile.objects.get(user=request.user)
-            riderProfile = RiderProfile.objects.get(user=obj)
-            riderProfile.management = managementProfile
-            riderProfile.save()
+            obj.RiderProfile.management = request.user.ManagementProfile
+            obj.RiderProfile.save()
             return Response({"msg":"created"})
     def delete(self,request):
         try:
@@ -88,13 +83,9 @@ class CreateOrderView(APIView):
         status_code = request.data["status"]
         address = request.data["address"]
         try:
-            managementProfile = ManagementProfile.objects.get(user=request.user)
-            Order.objects.create(email=email,address=address,mobile=mob,zip_code=zipCode,country=country,city=city,management=managementProfile,status=status_code)
+            Order.objects.create(email=email,address=address,mobile=mob,zip_code=zipCode,country=country,city=city,management=request.user.ManagementProfile,status=status_code)
         except:
-            print("asdf")
-            print(managementProfile)
-            # pass
-            # return Response({"msg":"error"},status=status.HTTP_409_CONFLICT)
+            return Response({"msg":"error"},status=status.HTTP_409_CONFLICT)
         else:
             return Response({"msg":"Order Created"})
 
@@ -144,9 +135,6 @@ class SignUpView(APIView):
 
 @api_view(["GET"])
 def test(resquest):
-    # obj = ManagementProfile.objects.get(pk=13)
-    # serializer = ManagementProfileSerializer(instance=obj).data
-    # print(obj.Rider)
-    # obj = Order.objects.all()
-    # serializer = OrderSerializer(obj,many=True).data
+    obj = User.objects.get(email="burhan@gmail.com")
+    print(obj.user)
     return Response({})
