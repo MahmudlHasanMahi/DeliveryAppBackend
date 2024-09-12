@@ -3,12 +3,16 @@ from .serializer import ManagementProfileSerializer,RiderSerializerProfile,Rider
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import IsAuthenticated
+from django.utils.crypto import constant_time_compare
+from django.db.utils import IntegrityError,Error
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import render
 from rest_framework import status
-from django.db.utils import IntegrityError,Error
+import hashlib
+import hmac
+import base64
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -95,7 +99,7 @@ class SignInView(APIView):
         password = request.data["password"]
         try:
             user = Management.objects.get(email=email)
-          
+
         except Management.DoesNotExist:
             return Response({'msg':"user doesnot Exist"},status=401)
         else:
@@ -134,7 +138,14 @@ class SignUpView(APIView):
                     },status=status.HTTP_200_OK)
 
 @api_view(["GET"])
-def test(resquest):
-    obj = User.objects.get(email="burhan@gmail.com")
-    print(obj.user)
-    return Response({})
+def test(request):
+    pass
+
+class test(APIView):
+    def get(self,request):
+        signature = request.headers["X-Wc-Webhook-Signature"]
+        byte_key = "dM4!XFCTjpMkVV10L,-lXozbhWyMS(*?WCXO JLagT`/(<:^n@".encode()
+        h = hmac.new(byte_key,request.body, hashlib.sha256)
+        base64Hmac = base64.b64encode(h.digest())
+        print(constant_time_compare(base64Hmac,signature))
+        return Response({"message":"welcome"})

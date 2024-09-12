@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
     'api',
+    'Webhook'
 ]
 
 MIDDLEWARE = [
@@ -173,5 +174,5 @@ STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api.User'
 AUTH_PROFILE_MODULE = 'accounts.ManagementProfile'
-CSRF_TRUSTED_ORIGINS = ['https://web-production-baca6.up.railway.app/']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
 CORS_ALLOW_ALL_ORIGINS = True

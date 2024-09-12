@@ -7,7 +7,7 @@ from django.dispatch import receiver
 
 
 class User(AbstractUser):
-    email = models.CharField(max_length=250,unique=True,null=False,blank=False)
+    # email = models.CharField(max_length=250,unique=True,null=False,blank=False)
     ROLE = [
         ('NONE','None'),
         ('MANAGEMENT', 'Management'),
@@ -22,9 +22,22 @@ class User(AbstractUser):
     city = models.CharField(max_length=100,null=True)
     created = models.DateTimeField(auto_now_add=True)
 
+class Email(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="Email")
+    email = models.EmailField(max_length=300,unique=True,null=False,blank=False)
+    def __str__(self):
+        return f'{self.email}'
+    
+@receiver(post_save,sender=User)
+def create_user_email(sender,instance,created,**kwargs):
+    if created:
+        email = instance.email
+        Email.objects.create(user=instance,email=email)
+
 
 class ManagementManager(BaseUserManager):
-    
+
+
     def get_queryset(self,*args,**kwargs):
         return super().get_queryset(*args,**kwargs).filter(role="MANAGEMENT")
     
@@ -44,7 +57,8 @@ class ManagementProfile(models.Model):
     user = models.OneToOneField(User,limit_choices_to={'role': "MANAGEMENT"},related_name="ManagementProfile",on_delete=models.CASCADE)
     title = models.TextField(max_length=250,unique=True,null=True,blank=True)
     industry = models.TextField(max_length=250,null=True,blank=True)
-
+    def __str__(self):
+        return self.user.username
 class ManagerRider(BaseUserManager):
     def get_queryset(self,*args,**kwargs):
         return super().get_queryset(*args,**kwargs).filter(role="RIDER")
@@ -70,14 +84,19 @@ class RiderProfile(models.Model):
                     ]
          
     status = models.CharField(max_length=15,choices=STATUS_CHOICE,default="NONE")
+    def __str__(self):
+        return self.user.username
 
 class ManagerCustomer(BaseUserManager):
     def get_queryset(self,*args,**kwargs):
         return super().get_queryset(*args,**kwargs).filter(role="CUSTOMER")    
+    
 class Customer(User):
     objects = ManagerCustomer()
     class Meta:
         proxy = True
+
+
 
 
 @receiver(post_save,sender=Customer)
@@ -87,30 +106,33 @@ def create_user_profile(instance,created, **kwargs):
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User,limit_choices_to={"role":"CUSTOMER"},related_name="CustomerProfile",on_delete = models.CASCADE)
-
+    def __str__(self):
+        return self.user.username
 class Order(models.Model):
-    email = models.CharField(max_length=250,null=True,blank=True)
-    address = models.CharField(max_length=1024,blank=True,null=True)
-    mobile = models.IntegerField(blank=True,null=True,unique=True)
-    zip_code = models.CharField(max_length=12,null=True,blank=True)
-    country = models.CharField(max_length=100,null=True,blank=True)
-    city = models.CharField(max_length=100,null=True,blank=True)
-    created = models.DateTimeField(auto_now_add=True,blank=True)
-    management = models.ForeignKey(ManagementProfile,on_delete=models.CASCADE,related_name="Order")
-    customer = models.ForeignKey(CustomerProfile,null=True,blank=True,on_delete=models.SET_NULL,related_name='Order')
-    rider = models.ForeignKey(RiderProfile,limit_choices_to={'status': "FREE"},null=True,blank=True,on_delete=models.SET_NULL,related_name='Order')
+    email       =   models.CharField(max_length=1024,blank=True,null=True)
+    mobile      =   models.IntegerField(blank=True,null=True,unique=True)
+    zip_code    =   models.CharField(max_length=250,null=True,blank=True)
+    address     =   models.CharField(max_length=12,null=True,blank=True)
+    country     =   models.CharField(max_length=100,null=True,blank=True)
+    city        =   models.CharField(max_length=100,null=True,blank=True)
+    created     =   models.DateTimeField(auto_now_add=True,blank=True)
+    management  =   models.ForeignKey(ManagementProfile,on_delete=models.CASCADE,related_name="Order")
+    customer    =   models.ForeignKey(CustomerProfile,null=True,blank=True,on_delete=models.SET_NULL,related_name='Order')
+    rider       =   models.ForeignKey(RiderProfile,limit_choices_to={'status': "FREE"},null=True,blank=True,on_delete=models.SET_NULL,related_name='Order')
     STATUS_CHOICE = [
                     ("NONE","None"),
                     ("DELIVERED","Delivered"),
                     ("NOT_DELIVERED","Not Delivered")
                     ]
-    
+
+
     status = models.CharField(max_length=15,choices=STATUS_CHOICE,default="NONE")
     Type = models.TextField(max_length=250,null=True,blank=True)
+    webhook = models.ForeignKey('Webhook.Webhook',default=None,null=True,blank=True,on_delete=models.SET_NULL,related_name="Order")
+    def __str__(self):
+        return f'#{self.pk}'
 
         
-    
-
 @receiver(post_save,sender=Order)
 def create_user_profile(sender,instance,created, **kwargs):
 
@@ -122,11 +144,9 @@ def create_user_profile(sender,instance,created, **kwargs):
             if customer.mobile != instance.mobile:
                 customer['mobile'] = instance.mobile
                 customer.save()
-
         else:
             user = User.objects.create_user(email=instance.email,address=instance.address,mobile=instance.mobile,
                                     zip_code = instance.zip_code,country=instance.country,city=instance.city,
                                     role="CUSTOMER",username=instance.email.split("@")[0])
             customer = CustomerProfile.objects.create(user=user)
             Order.objects.filter(pk=instance.pk).update(customer=customer)
-
